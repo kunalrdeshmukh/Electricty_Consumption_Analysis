@@ -4,46 +4,48 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
 import java.io.IOException;
+import java.text.*;
+import java.util.Calendar;
+import java.util.Date;
+
 
 public class MRmapper  extends Mapper <LongWritable,Text,Text,Text> {
     static String IFS=",";
     static String OFS=",";
     static int NF=11;
-    static int bad_record = 0;
     public void map(LongWritable key, Text value, Context context) 
                     throws IOException, InterruptedException {
         
-        /** USvideos.csv
-        video_id0
-        title1
-        channel_title2
-        category_id3
-        tags4
-        views5
-        likes6
-        dislikes7
-        comment_total8  ||   videoid , views likes dislikes link
-        thumbnail_link9
-        date10
+        /** 
+		0 Date;
+		1 Time;
+		2 Global_active_power;
+		3 Global_reactive_power;
+		4 Voltage;
+	 	5 Global_intensity;
+		6 Sub_metering_1;
+		7 Sub_metering_2;
+		8 Sub_metering_3
         */
     	// TODO 2: convert value to string
-    	String[] tokens = (value.toString()).split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-        // TODO 3: count num fields, increment bad record counter, and return if bad
-    	if (tokens.length != 11) {
-    		bad_record++;
-    		return; 
-    	}
+    	String[] tokens = (value.toString()).split(";(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
         // TODO 3: count num fields, increment bad record counter, and return if bad
 
-        // TODO 4: pull out fields of interest
-        
-        // TODO 5: construct key and composite value 
-        
-        // TODO 6: write key value pair to context
+    	if (tokens[0].equals("Date")) { return;} 
     	else {
-    		if (tokens[0].equals("video_id")) { return;} else {
-    		context.write(new Text(tokens[3]), new Text(tokens[0] + "," +
-        			tokens[5]+","+tokens[6]+","+tokens[7]+","+tokens[9]));
+    		String format = "ddMMyyyy";
+    		SimpleDateFormat df = new SimpleDateFormat(format);
+    		int week = 0;
+    		try {
+				Date date = df.parse(tokens[0]);
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(date);
+				week = cal.get(Calendar.WEEK_OF_YEAR);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+    		context.write(new Text(Integer.toString(week)), new Text(tokens[1] + "," +
+        			tokens[2]+","+tokens[3]+","+tokens[4]+","+tokens[5]+","+tokens[6]+","+tokens[7]+","+tokens[8]));
     	}}    	
-		 }}
+		 }
 
